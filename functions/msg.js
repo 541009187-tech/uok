@@ -1,7 +1,8 @@
 export async function onRequest({env,request}){
   const key="msgboard"
+  const ADMIN_NAME = "windows"
+
   if(request.method==="POST"){
-    // 新增留言
     const {c,nick}=await request.json()
     const oldData=await env.MSG.get(key)
     const list=oldData ? JSON.parse(oldData) : []
@@ -10,15 +11,23 @@ export async function onRequest({env,request}){
     await env.MSG.put(key,JSON.stringify(list))
     return Response.json({ok:true})
   }else if(request.method==="DELETE"){
-    // 删除留言
-    const {idx}=await request.json()
+    const {idx,nick}=await request.json()
     const oldData=await env.MSG.get(key)
     const list=oldData ? JSON.parse(oldData) : []
+    const targetMsg = list[idx]
+    if(!targetMsg) return Response.json({ok:false,msg:"留言不存在"},{status:400})
+
+    // 后端权限判断
+    const isAdmin = nick === ADMIN_NAME
+    const isOwner = targetMsg.nick === nick
+    if(!isAdmin && !isOwner){
+      return Response.json({ok:false,msg:"无权限删除"},{status:403})
+    }
+
     list.splice(idx,1)
     await env.MSG.put(key,JSON.stringify(list))
     return Response.json({ok:true})
   }else{
-    // 获取全部留言
     const raw=await env.MSG.get(key)
     return Response.json(raw ? JSON.parse(raw) : [])
   }
