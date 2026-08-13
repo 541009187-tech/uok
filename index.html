@@ -1,31 +1,165 @@
 <!DOCTYPE html>
-<html>
-<body style="max-width:600px;margin:30px auto;font-size:18px">
-<h2>留言板</h2>
-<textarea id="txt" style="width:100%;height:80px" placeholder="写留言"></textarea>
-<button onclick="send()">提交留言</button>
-<div id="list" style="margin-top:20px;"></div>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>云端留言板</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft YaHei", Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 30px auto;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    h2 {
+      text-align: center;
+      color: #1f2937;
+      margin-bottom: 24px;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 16px;
+      resize: none;
+      outline: none;
+      background: #f9fafb;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    textarea:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    button {
+      margin-top: 16px;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .list {
+      margin-top: 24px;
+    }
+
+    .msg-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      background: #fafafa;
+      transition: background 0.2s;
+    }
+
+    .msg-item:hover {
+      background: #f3f4f6;
+    }
+
+    .time {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+
+    .content {
+      font-size: 16px;
+      color: #1f2937;
+      line-height: 1.6;
+    }
+
+    .empty {
+      text-align: center;
+      color: #9ca3af;
+      padding: 30px 0;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>云端留言板</h2>
+  <textarea id="txt" placeholder="写留言"></textarea>
+  <button onclick="send()">提交留言</button>
+  <div id="list" class="list"></div>
+</div>
 
 <script>
-async function load(){
-  const res=await fetch("/msg")
-  const arr=await res.json()
-  document.getElementById("list").innerHTML=arr.reverse().map(item=>`<div style="border:1px solid #eee;padding:10px;margin:8px 0">${item.t}<br>${item.c}</div>`).join("")
-}
+  async function load(){
+    const res = await fetch("/msg");
+    const arr = await res.json();
 
-async function send(){
-  const content=txt.value.trim()
-  if(!content){alert("不能空白");return;}
-  await fetch("/msg",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({c:content})
-  })
-  txt.value=""
-  load()
-}
-load()
-setInterval(load,10000)
+    if (arr.length === 0) {
+      document.getElementById("list").innerHTML = '<div class="empty">暂无留言，快来抢沙发吧</div>';
+      return;
+    }
+
+    document.getElementById("list").innerHTML = arr.reverse().map(item => `
+      <div class="msg-item">
+        <div class="time">${item.t}</div>
+        <div class="content">${item.c}</div>
+      </div>
+    `).join("");
+  }
+
+  async function send(){
+    const content = txt.value.trim();
+    if(!content){
+      alert("不能空白");
+      return;
+    }
+
+    await fetch("/msg",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({c:content})
+    });
+
+    txt.value = "";
+    load();
+  }
+
+  load();
+  setInterval(load, 10000);
 </script>
+
 </body>
 </html>
