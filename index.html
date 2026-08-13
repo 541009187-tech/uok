@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<body style="max-width:600px;margin:30px auto;font-size:18px">
+<h2>云端留言板</h2>
+<textarea id="txt" style="width:100%;height:80px" placeholder="写留言"></textarea>
+<button onclick="send()">提交留言</button>
+<div id="list" style="margin-top:20px;"></div>
+
+<script>
+async function load(){
+  const res=await fetch("/msg")
+  const arr=await res.json()
+  document.getElementById("list").innerHTML=arr.reverse().map(item=>`<div style="border:1px solid #eee;padding:10px;margin:8px 0">${item.t}<br>${item.c}</div>`).join("")
+}
+
+async function send(){
+  const content=txt.value.trim()
+  if(!content){alert("不能空白");return;}
+  await fetch("/msg",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({c:content})
+  })
+  txt.value=""
+  load()
+}
+load()
+setInterval(load,10000)
+</script>
+</body>
+</html>
